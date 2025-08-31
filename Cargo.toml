@@ -13,7 +13,6 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-default = ["rt-tokio-crypto-rust"]
 rt-async-io-crypto-rust = ["secret-service/rt-async-io-crypto-rust"]
 rt-async-io-crypto-openssl = ["secret-service/rt-async-io-crypto-openssl"]
 rt-tokio-crypto-rust = ["secret-service/rt-tokio-crypto-rust"]
