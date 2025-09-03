@@ -12,7 +12,7 @@ jobs:
           - "rt-async-io-crypto-rust"
           - "rt-async-io-crypto-openssl"
           - "rt-tokio-crypto-rust"
-          - "tr-tokio-crypto-openssl"
+          - "rt-tokio-crypto-openssl"
 
     steps:
       - name: install required packages
@@ -59,7 +59,7 @@ jobs:
           - "rt-async-io-crypto-rust"
           - "rt-async-io-crypto-openssl"
           - "rt-tokio-crypto-rust"
-          - "tr-tokio-crypto-openssl"
+          - "rt-tokio-crypto-openssl"
 
     steps:
       - name: install required packages
