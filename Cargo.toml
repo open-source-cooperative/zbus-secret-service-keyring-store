@@ -22,7 +22,7 @@ rt-tokio-crypto-openssl = ["secret-service/rt-tokio-crypto-openssl"]
 name = "example"
 
 [dependencies]
-secret-service = { version = "5", path = "../secret-service-rs" }
+secret-service = { version = "5.1" }
 keyring-core = { version = "0.6" }
 zbus = "5.10.0"
 
@@ -30,4 +30,5 @@ zbus = "5.10.0"
 fastrand = "2.3.0"
 
 [package.metadata.docs.rs]
+features = ["rt-async-io-crypto-rust"]
 targets = ["x86_64-unknown-linux-gnu"]
