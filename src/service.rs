@@ -20,7 +20,7 @@ pub(crate) struct Service<'a> {
     ss: Mutex<SecretService<'a>>,
 }
 
-impl<'a> Service<'a> {
+impl Service<'_> {
     pub(crate) fn new() -> Result<Self> {
         Ok(Self {
             ss: Mutex::new(SecretService::connect(EncryptionType::Dh).map_err(platform_failure)?),
