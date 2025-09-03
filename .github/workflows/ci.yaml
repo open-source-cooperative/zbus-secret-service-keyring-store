@@ -9,16 +9,16 @@ jobs:
     strategy:
       matrix:
         features:
-          - "crypto-rust"
-          - "crypto-openssl"
-          - "crypto-rust,vendored"
-          - "crypto-openssl,vendored"
+          - "rt-async-io-crypto-rust"
+          - "rt-async-io-crypto-openssl"
+          - "rt-tokio-crypto-rust"
+          - "rt-tokio-crypto-openssl"
 
     steps:
       - name: install required packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y libdbus-1-dev libssl-dev
+          sudo apt-get install -y libssl-dev
 
       - name: Fetch head
         uses: actions/checkout@v5
@@ -33,7 +33,7 @@ jobs:
         run: cargo fmt --check
 
       - name: Clippy check
-        run: cargo clippy --no-deps --all-targets -- -D warnings
+        run: cargo clippy --features=${{ matrix.features }} --no-deps --all-targets -- -D warnings
 
       - name: Install gnome-keyring
         run: sudo apt-get install -y gnome-keyring
@@ -45,19 +45,27 @@ jobs:
         run: gnome-keyring-daemon --components=secrets --daemonize --unlock <<< 'foobar'
 
       - name: Build and Test
-        run: cargo test --no-default-features --features=${{ matrix.features }} --verbose
+        run: cargo test --features=${{ matrix.features }} --verbose
 
       - name: Build examples
-        run: cargo build --examples --verbose
+        run: cargo build --features=${{ matrix.features }} --examples --verbose
 
   ci_msrv:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        features:
+          - "rt-async-io-crypto-rust"
+          - "rt-async-io-crypto-openssl"
+          - "rt-tokio-crypto-rust"
+          - "rt-tokio-crypto-openssl"
 
     steps:
       - name: install required packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y libdbus-1-dev libssl-dev
+          sudo apt-get install -y libssl-dev
 
       - name: Fetch head
         uses: actions/checkout@v5
@@ -69,4 +77,4 @@ jobs:
           components: clippy
 
       - name: Clippy check
-        run: cargo clippy --no-deps --all-targets -- -D warnings
+        run: cargo clippy --features=${{ matrix.features }} --no-deps --all-targets -- -D warnings

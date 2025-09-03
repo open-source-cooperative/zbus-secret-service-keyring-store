@@ -10,7 +10,7 @@ To use this credential store provider, you must take a dependency on the [keyrin
 
 ## Features
 
-This crate has no features of its own: all of its features are simply passed on to the [dbus-secret-service crate](https://crates.io/crates/dbus-secret-service) that it uses to communicate with Secret Service. (See the [docs for that crate](https://docs.rs/docs/dbus-secret-service) for details.) You must enable either the `crypto-rust` or the `crypto-openssl` feature because this crate always encrypts communication with the Secret Service; the default specified by this crate is `crypto-rust`.
+This crate has no features of its own: all of its features are simply passed on to the [secret-service crate](https://crates.io/crates/secret-service) that it uses to communicate with Secret Service. (See the [docs for that crate](https://docs.rs/docs/dbus-secret-service) for details.) You must enable exactly one of the four (mutually-exclusive) features in order to declare which async runtime you are using and which cryptography utilities you want to use.
 
 ## License
 

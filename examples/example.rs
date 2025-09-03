@@ -2,8 +2,8 @@
 //! in the keyutils keystore using APIs from the keyring crate.
 use std::collections::HashMap;
 
-use zbus_secret_service_keyring_store::{Store, cred::Specifier};
 use keyring_core::{Entry, Error};
+use zbus_secret_service_keyring_store::{Store, cred::Specifier};
 
 fn main() {
     // Set secret service backend as the default store

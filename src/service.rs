@@ -10,8 +10,8 @@ to the Secret Service. Each store holds the singleton used by its creds.
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use zbus::zvariant::OwnedObjectPath;
 use secret_service::{EncryptionType, blocking::Item, blocking::SecretService};
+use zbus::zvariant::OwnedObjectPath;
 
 use crate::errors::{decode_error, platform_failure};
 use keyring_core::{Error, Result};
@@ -20,7 +20,7 @@ pub(crate) struct Service<'a> {
     ss: Mutex<SecretService<'a>>,
 }
 
-impl <'a> Service<'a> {
+impl Service<'_> {
     pub(crate) fn new() -> Result<Self> {
         Ok(Self {
             ss: Mutex::new(SecretService::connect(EncryptionType::Dh).map_err(platform_failure)?),

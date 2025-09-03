@@ -13,7 +13,6 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-default = ["rt-tokio-crypto-rust"]
 rt-async-io-crypto-rust = ["secret-service/rt-async-io-crypto-rust"]
 rt-async-io-crypto-openssl = ["secret-service/rt-async-io-crypto-openssl"]
 rt-tokio-crypto-rust = ["secret-service/rt-tokio-crypto-rust"]
@@ -23,12 +22,13 @@ rt-tokio-crypto-openssl = ["secret-service/rt-tokio-crypto-openssl"]
 name = "example"
 
 [dependencies]
-secret-service = { version = "5", path = "../secret-service-rs" }
-keyring-core = "0.5"
+secret-service = { version = "5.1" }
+keyring-core = { version = "0.6" }
 zbus = "5.10.0"
 
 [dev-dependencies]
 fastrand = "2.3.0"
 
 [package.metadata.docs.rs]
+features = ["rt-async-io-crypto-rust"]
 targets = ["x86_64-unknown-linux-gnu"]
