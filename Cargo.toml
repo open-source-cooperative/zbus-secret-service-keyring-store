@@ -9,7 +9,7 @@ rust-version = "1.85"
 exclude = [".github/"]
 readme = "README.md"
 name = "zbus-secret-service-keyring-store"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
 [features]
@@ -23,7 +23,7 @@ name = "example"
 
 [dependencies]
 secret-service = { version = "5.1" }
-keyring-core = { version = "0.6" }
+keyring-core = { version = "0.7" }
 zbus = "5.10.0"
 
 [dev-dependencies]
