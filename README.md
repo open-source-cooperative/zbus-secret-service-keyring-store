@@ -2,7 +2,7 @@
 
 [![build](https://github.com/open-source-cooperative/dbus-secret-service-keyring-store/actions/workflows/ci.yaml/badge.svg)](https://github.com/open-source-cooperative/dbus-secret-service-keyring-store/actions) [![crates.io](https://img.shields.io/crates/v/dbus-secret-service-keyring-store.svg?style=flat-square)](https://crates.io/crates/dbus-secret-service-keyring-store) [![docs.rs](https://docs.rs/dbus-secret-service-keyring-store/badge.svg)](https://docs.rs/dbus-secret-service-keyring-store)
 
-This is a [keyring credential store provider](https://github.com/open-source-cooperative/keyring-rs/wiki/Keyring) that stores credentials in Secret Service. It’s compatible with [keyring-core](https://crates.io/crates/keyring-core) v0.6 and later.
+This library provides a credential store for use with the [keyring ecosystem](https://github.com/open-source-cooperative/keyring-rs/wiki/Keyring) that uses the [Secret Service](https://specifications.freedesktop.org/secret-service/latest/description.html) for credential storage.
 
 ## Usage
 
