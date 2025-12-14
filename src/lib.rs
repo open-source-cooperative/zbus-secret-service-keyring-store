@@ -92,7 +92,17 @@ As noted in
 there is no "default" collection defined under WSL.  So this crate will not work
 on WSL unless you specify a non-`default` target modifier on every specifier.
 
- */
+ ## Usage with KDE Wallet
+
+On many KDE-based desktop systems, the default Secret Service implementation
+is provided by the KDE Wallet (and its included secret-service-api wrapper).
+Since the KDE Wallet itself is limited to reading and writing UTF-8 data,
+you cannot use this module to store arbitrary binary secrets unless you
+first encode them as UTF-8 strings (e.g., via base64 encoding). Once you
+encode your secrets in UTF-8, you can read and write them using as either
+passwords or secrets in this interface.
+
+*/
 
 pub mod cred;
 pub mod errors;
