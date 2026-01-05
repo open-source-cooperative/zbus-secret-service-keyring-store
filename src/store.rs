@@ -17,7 +17,10 @@ pub struct Store {
 
 impl std::fmt::Debug for Store {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Store").field("id", &self.id).finish()
+        f.debug_struct("Store")
+            .field("vendor", &self.vendor())
+            .field("id", &self.id())
+            .finish()
     }
 }
 
