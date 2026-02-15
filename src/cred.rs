@@ -103,8 +103,8 @@ impl Specifier {
         let mut result: HashMap<&str, &str> = HashMap::new();
         result.insert("service", self.service.as_str());
         result.insert("username", self.user.as_str());
-        if self.target.is_some() {
-            result.insert("target", self.target.as_ref().unwrap());
+        if let Some(target) = &self.target {
+            result.insert("target", target.as_str());
         }
         result
     }
