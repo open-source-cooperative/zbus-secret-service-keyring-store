@@ -48,7 +48,8 @@ fn entry_new_with_target(target: &str, service: &str, user: &str) -> Entry {
 fn generate_random_string() -> String {
     use fastrand;
     use std::iter::repeat_with;
-    repeat_with(fastrand::alphanumeric).take(12).collect()
+    let s: String = repeat_with(fastrand::alphanumeric).take(12).collect();
+    format!("test-{s}")
 }
 
 fn generate_random_bytes() -> Vec<u8> {
