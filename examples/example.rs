@@ -19,7 +19,7 @@ fn main() {
     if retrieved != password1 {
         panic!("Passwords do not match");
     }
-    println!("Entry with no target: {:?}", entry1);
+    println!("Entry with no target: {entry1:?}");
     let modifiers = HashMap::from([("target", "my-special-collection")]);
     let entry2 = Entry::new_with_modifiers(service, user, &modifiers).unwrap();
     entry2.set_password(password2).unwrap();
@@ -27,7 +27,7 @@ fn main() {
     if retrieved != password2 {
         panic!("Passwords do not match");
     }
-    println!("Entry with a custom target: {:?}", entry2);
+    println!("Entry with a custom target: {entry2:?}");
     // service and user of entry1 are the same as entry2, but it has no target attribute
     assert!(matches!(
         entry1.get_password().unwrap_err(),
