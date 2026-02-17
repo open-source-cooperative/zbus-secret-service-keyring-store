@@ -103,8 +103,8 @@ impl Specifier {
         let mut result: HashMap<&str, &str> = HashMap::new();
         result.insert("service", self.service.as_str());
         result.insert("username", self.user.as_str());
-        if self.target.is_some() {
-            result.insert("target", self.target.as_ref().unwrap());
+        if let Some(target) = &self.target {
+            result.insert("target", target.as_str());
         }
         result
     }
@@ -211,6 +211,11 @@ impl Wrapper {
         self.ss.ensure_unlocked(&self.path)?;
         self.ss.set_label(&self.path, label)
     }
+
+    /// Gets the path of the wrapped item.
+    pub fn get_path(&self) -> String {
+        self.path.to_string()
+    }
 }
 
 impl CredentialApi for Wrapper {
@@ -256,10 +261,10 @@ impl CredentialApi for Wrapper {
             return None;
         }
         let attributes = self.ss.get_attributes(&self.path).unwrap_or_default();
-        if let Some(service) = attributes.get("service") {
-            if let Some(user) = attributes.get("username") {
-                return Some((service.to_string(), user.to_string()));
-            }
+        if let Some(service) = attributes.get("service")
+            && let Some(user) = attributes.get("username")
+        {
+            return Some((service.to_string(), user.to_string()));
         }
         None
     }

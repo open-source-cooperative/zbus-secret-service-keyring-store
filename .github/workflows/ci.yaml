@@ -4,15 +4,17 @@ on: [ workflow_dispatch, push, pull_request ]
 
 jobs:
   ci_stable:
-    runs-on: ubuntu-latest
-
     strategy:
       matrix:
         features:
-          - "rt-async-io-crypto-rust"
-          - "rt-async-io-crypto-openssl"
-          - "rt-tokio-crypto-rust"
-          - "rt-tokio-crypto-openssl"
+          - "crypto-rust"
+          - "crypto-openssl"
+        platform:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+
+    runs-on:
+      - ${{ matrix.platform }}
 
     steps:
       - name: install required packages
@@ -56,10 +58,8 @@ jobs:
     strategy:
       matrix:
         features:
-          - "rt-async-io-crypto-rust"
-          - "rt-async-io-crypto-openssl"
-          - "rt-tokio-crypto-rust"
-          - "rt-tokio-crypto-openssl"
+          - "crypto-rust"
+          - "crypto-openssl"
 
     steps:
       - name: install required packages
@@ -73,7 +73,7 @@ jobs:
       - name: Install rust MSRV
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.85
+          toolchain: 1.88
           components: clippy
 
       - name: Clippy check
