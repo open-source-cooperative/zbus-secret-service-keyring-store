@@ -10,9 +10,9 @@ To use this credential store provider, you must take a dependency on the [keyrin
 
 ## Features
 
-This crate has no features of its own: all of its features are simply passed on to the [secret-service crate](https://crates.io/crates/secret-service) that it uses to communicate with Secret Service. (See the [docs for that crate](https://docs.rs/docs/zbus-secret-service) for details.) You must enable exactly one of the four (mutually-exclusive) features in order to declare which async runtime you are using and which cryptography utilities you want to use.
+The features of this crate mirror those of the [secret-service crate](https://crates.io/crates/secret-service).  If your application does not use an asynchronous runtime, then you should only enable one of the two features which specify the cryptographic backend the Secret Service will use (`crypto-rust` or `crypto-openssl`). If your application uses an asynchronous runtime, you should instead enable one of the four features that specify both which runtime you are using and which cryptographic backend to use (`rt-tokio-crypto-rust`, `rt-tokio-crypto-openssl`, `rt-async-std-crypto-rust`, or `rt-async-std-crypto-openssl`).
 
-## Changelog
+# Changelog
 
 See the [release history on GitHub](https://github.com/open-source-cooperative/zbus-secret-service-keyring-store/releases) for full details.
 
