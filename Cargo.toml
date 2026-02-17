@@ -5,11 +5,11 @@ homepage = "https://github.com/open-source-cooperative/keyring-rs/wiki/Keyring"
 keywords = ["zbus", "secret-service", "credential-store", "keyring"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/open-source-cooperative/zbus-secret-service-keyring-store.git"
-rust-version = "1.85"
+rust-version = "1.88"
 exclude = [".github/"]
 readme = "README.md"
 name = "zbus-secret-service-keyring-store"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2024"
 
 [features]
@@ -24,12 +24,14 @@ rt-tokio-crypto-openssl = ["secret-service/rt-tokio-crypto-openssl"]
 name = "example"
 
 [dependencies]
-secret-service = { version = "5.1" }
-keyring-core = { version = "0.7" }
-zbus = "5.10.0"
+secret-service = { version = "5.1.0" }
+keyring-core = { version = "0.7.2" }
+zbus = "5.13.2"
 
 [dev-dependencies]
 fastrand = "2.3.0"
+regex = "1.12.3"
+sscanf = "0.4.4"
 
 [package.metadata.docs.rs]
 features = ["rt-async-io-crypto-rust"]
