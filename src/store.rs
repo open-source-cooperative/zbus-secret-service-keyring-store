@@ -64,7 +64,7 @@ impl Store {
 
 impl CredentialStoreApi for Store {
     fn vendor(&self) -> String {
-        "Secret Service store, https://crates.io/crates/dbus-secret-service-keyring-store"
+        "Secret Service store, https://crates.io/crates/zbus-secret-service-keyring-store"
             .to_string()
     }
 

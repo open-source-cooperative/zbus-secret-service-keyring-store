@@ -1,11 +1,11 @@
 /*!
 
-# dbus-secret-service credential store for keyring
+# zbus-secret-service credential store for keyring
 
 This module implements a credential store for the
 [keyring](https://github.com/open-source-cooperative/keyring-rs/wiki/Keyring)
 that uses the secret service as its back end via the
-[dbus-secret-service crate](https://crates.io/crates/dbus-secret-service).
+[zbus-secret-service crate](https://crates.io/crates/zbus-secret-service).
 
 ## Attributes
 
@@ -55,7 +55,7 @@ the same service and user.
 This crate has no features of its own: all of its features are simply passed
 on to the [secret-service crate](https://crates.io/crates/secret-service)
 that it uses to communicate with Secret Service. (See the
-[docs for that crate](https://docs.rs/docs/dbus-secret-service) for details.)
+[docs for that crate](https://docs.rs/docs/zbus-secret-service) for details.)
 You must enable exactly one of the four (mutually-exclusive) features
 in order to declare which async runtime you are using and
 which cryptography utilities you want to use.
@@ -63,7 +63,7 @@ which cryptography utilities you want to use.
 ## Headless usage
 
 If you must use the secret-service on a headless linux box, be aware that there
-are known issues with getting dbus and secret-service and the gnome keyring to
+are known issues with getting zbus and secret-service and the gnome keyring to
 work properly in headless environments. For a quick workaround, look at how this
 project's
 [CI workflow](https://github.com/hwchen/keyring-rs/blob/master/.github/workflows/ci.yaml)
@@ -82,7 +82,7 @@ function unlock-keyring ()
 }
 ```
 
-For an excellent treatment of all the headless dbus issues, see
+For an excellent treatment of all the headless zbus issues, see
 [this answer on ServerFault](https://serverfault.com/a/906224/79617).
 
 ## Usage on Windows Subsystem for Linux
