@@ -25,9 +25,9 @@ fn main() -> Result<()> {
             println!("Usage: cleanup [-a | --all | start-end | index]");
         } else if arg == "-a" || arg == "--all" {
             show_progress(&names, &entries, true, 1, names.len())?;
-        } else if let Ok((start, end)) = sscanf!(arg, "{}-{}", usize, usize) {
+        } else if let Some((start, end)) = sscanf!(arg, "{}-{}", usize, usize) {
             show_progress(&names, &entries, true, start, end)?;
-        } else if let Ok(index) = sscanf!(arg, "{}", usize) {
+        } else if let Some(index) = sscanf!(arg, "{}", usize) {
             show_progress(&names, &entries, true, index, index)?;
         } else {
             println!("Usage: cleanup [-a | --all | start-end | index]");
