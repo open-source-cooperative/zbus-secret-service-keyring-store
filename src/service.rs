@@ -110,7 +110,8 @@ impl Service<'_> {
             .lock()
             .expect("Mutex failure in credential store: please report a bug");
         let item = ss.get_item_by_path(path.clone()).map_err(decode_error)?;
-        item.set_secret(secret, "text/plain").map_err(decode_error)
+        item.set_secret(secret, "application/octet-stream")
+            .map_err(decode_error)
     }
 
     /// Given an existing item's path, retrieve its secret.
