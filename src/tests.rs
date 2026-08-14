@@ -188,6 +188,21 @@ fn test_update() {
 }
 
 #[test]
+fn test_update_secret() {
+    let name = generate_random_string();
+    let entry = entry_new(&name, &name);
+    // 0xFF can never appear in UTF-8, so these secrets are unambiguously binary
+    let mut initial = generate_random_bytes();
+    initial.push(0xFF);
+    entry
+        .set_secret(&initial)
+        .unwrap_or_else(|err| panic!("Can't set initial secret: {err:?}"));
+    let mut updated = generate_random_bytes();
+    updated.push(0xFF);
+    test_round_trip_secret("updated binary secret", &entry, &updated);
+}
+
+#[test]
 fn test_get_update_attributes() {
     let name1 = generate_random_string();
     let name2 = generate_random_string();
