@@ -9,7 +9,7 @@ rust-version = "1.88"
 exclude = [".github/"]
 readme = "README.md"
 name = "zbus-secret-service-keyring-store"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 
 [features]
@@ -21,13 +21,13 @@ rt-tokio-crypto-rust = ["secret-service/rt-tokio-crypto-rust"]
 rt-tokio-crypto-openssl = ["secret-service/rt-tokio-crypto-openssl"]
 
 [dependencies]
-keyring-core = { version = "1" }
-secret-service = { version = "5.1" }
-zbus = "5.14"
+keyring-core = "1"
+secret-service = "5"
+zbus = "5"
 
 [dev-dependencies]
-fastrand = "2.4"
-regex = "1.12"
+fastrand = "2"
+regex = "1"
 sscanf = "0.5"
 
 [package.metadata.docs.rs]
