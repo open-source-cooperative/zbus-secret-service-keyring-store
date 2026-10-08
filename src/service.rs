@@ -16,6 +16,18 @@ use zbus::zvariant::OwnedObjectPath;
 use crate::errors::{decode_error, platform_failure};
 use keyring_core::{Error, Result};
 
+/// The content type of secrets set as passwords, which are always UTF-8 text.
+///
+/// Secret Service implementations rely on it: KeePassXC only puts secrets
+/// whose content type is (or derives from) `text/plain` in an entry's
+/// password field (others become an attachment), and the KDE Wallet only
+/// stores secrets with a `text/` content type as passwords (others become
+/// binary entries).
+pub(crate) const TEXT: &str = "text/plain";
+
+/// The content type of secrets set as bytes, which needn't be text.
+pub(crate) const BINARY: &str = "application/octet-stream";
+
 pub(crate) struct Service<'a> {
     ss: Mutex<SecretService<'a>>,
 }
@@ -55,6 +67,7 @@ impl Service<'_> {
         label: &str,
         attributes: HashMap<&str, &str>,
         secret: &[u8],
+        content_type: &str,
     ) -> Result<()> {
         let ss = self
             .ss
@@ -71,7 +84,7 @@ impl Service<'_> {
                 attributes,
                 secret,
                 true, // replace
-                "application/octet-stream",
+                content_type,
             )
             .map_err(platform_failure)?;
         Ok(())
@@ -104,14 +117,29 @@ impl Service<'_> {
     }
 
     /// Given an item's path, set its secret.
-    pub(crate) fn set_secret(&self, path: &OwnedObjectPath, secret: &[u8]) -> Result<()> {
+    pub(crate) fn set_secret(
+        &self,
+        path: &OwnedObjectPath,
+        secret: &[u8],
+        content_type: &str,
+    ) -> Result<()> {
         let ss = self
             .ss
             .lock()
             .expect("Mutex failure in credential store: please report a bug");
         let item = ss.get_item_by_path(path.clone()).map_err(decode_error)?;
-        item.set_secret(secret, "application/octet-stream")
-            .map_err(decode_error)
+        item.set_secret(secret, content_type).map_err(decode_error)
+    }
+
+    /// Given an existing item's path, retrieve the content type of its secret.
+    #[cfg(test)]
+    pub(crate) fn get_content_type(&self, path: &OwnedObjectPath) -> Result<String> {
+        let ss = self
+            .ss
+            .lock()
+            .expect("Mutex failure in credential store: please report a bug");
+        let item = ss.get_item_by_path(path.clone()).map_err(decode_error)?;
+        item.get_secret_content_type().map_err(decode_error)
     }
 
     /// Given an existing item's path, retrieve its secret.

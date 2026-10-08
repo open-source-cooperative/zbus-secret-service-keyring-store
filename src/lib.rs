@@ -92,6 +92,17 @@ As noted in
 there is no "default" collection defined under WSL.  So this crate will not work
 on WSL unless you specify a non-`default` target modifier on every specifier.
 
+## Passwords and secrets
+
+Passwords (`set_password`) are stored with the content type `text/plain`,
+secrets (`set_secret`) with `application/octet-stream`. Some Secret Service
+implementations go by the content type: KeePassXC only puts secrets whose
+content type is (or derives from) `text/plain` in an entry's password field
+and keeps others as an attachment, and the KDE Wallet only stores secrets
+with a `text/` content type as passwords. So store a credential as a password
+if it's text, and users will see it as one. (GNOME Keyring doesn't keep
+content types: it reports `text/plain` for every secret.)
+
  ## Usage with KDE Wallet
 
 On many KDE-based desktop systems, the default Secret Service implementation
@@ -100,7 +111,8 @@ Since the KDE Wallet itself is limited to reading and writing UTF-8 data,
 you cannot use this module to store arbitrary binary secrets unless you
 first encode them as UTF-8 strings (e.g., via base64 encoding). Once you
 encode your secrets in UTF-8, you can read and write them using as either
-passwords or secrets in this interface.
+passwords or secrets in this interface; set them as passwords to have the
+KDE Wallet store them as passwords.
 
 */
 
