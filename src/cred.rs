@@ -7,7 +7,7 @@ use keyring_core::Entry;
 use keyring_core::api::{Credential, CredentialApi};
 use keyring_core::error::{Error, Result};
 
-use crate::service::Service;
+use crate::service::{BINARY, Service, TEXT};
 
 /// The specifier for an item in the secret-service.
 ///
@@ -98,6 +98,26 @@ impl Specifier {
         }
     }
 
+    /// Sets the secret of the unique matching item, creating one if there is
+    /// none, declaring the given content type.
+    fn set(&self, secret: &[u8], content_type: &str) -> Result<()> {
+        // first try to find a unique, existing, matching item and set its password
+        match self.get_unique_item() {
+            Ok(p) => return self.ss.set_secret(&p, secret, content_type),
+            Err(Error::NoEntry) => {}
+            Err(err) => return Err(err),
+        }
+        // if there is no existing item, create one for this credential.
+        let collection = self.target.clone().unwrap_or("default".to_string());
+        self.ss.create_item(
+            &collection,
+            &self.label,
+            self.search_attributes(),
+            secret,
+            content_type,
+        )
+    }
+
     /// Provide a HashMap of search attributes for this specifier.
     fn search_attributes(&self) -> HashMap<&str, &str> {
         let mut result: HashMap<&str, &str> = HashMap::new();
@@ -112,17 +132,20 @@ impl Specifier {
 
 impl CredentialApi for Specifier {
     /// See the keyring-core API docs.
+    ///
+    /// Passwords are stored as text (`text/plain`), so that Secret Service
+    /// implementations which care about the content type (KeePassXC, the
+    /// KDE Wallet) keep them as passwords.
+    fn set_password(&self, password: &str) -> Result<()> {
+        self.set(password.as_bytes(), TEXT)
+    }
+
+    /// See the keyring-core API docs.
+    ///
+    /// Secrets are stored as `application/octet-stream`, since they needn't
+    /// be text.
     fn set_secret(&self, secret: &[u8]) -> Result<()> {
-        // first try to find a unique, existing, matching item and set its password
-        match self.get_unique_item() {
-            Ok(p) => return self.ss.set_secret(&p, secret),
-            Err(Error::NoEntry) => {}
-            Err(err) => return Err(err),
-        }
-        // if there is no existing item, create one for this credential.
-        let collection = self.target.clone().unwrap_or("default".to_string());
-        self.ss
-            .create_item(&collection, &self.label, self.search_attributes(), secret)
+        self.set(secret, BINARY)
     }
 
     /// See the keyring-core API docs.
@@ -216,13 +239,28 @@ impl Wrapper {
     pub fn get_path(&self) -> String {
         self.path.to_string()
     }
+
+    /// Returns the content type of the wrapped item's secret.
+    #[cfg(test)]
+    pub(crate) fn get_content_type(&self) -> Result<String> {
+        self.ss.ensure_unlocked(&self.path)?;
+        self.ss.get_content_type(&self.path)
+    }
 }
 
 impl CredentialApi for Wrapper {
     /// See the keyring-core API docs.
+    ///
+    /// Passwords are stored as text (`text/plain`), as in [Specifier].
+    fn set_password(&self, password: &str) -> Result<()> {
+        self.ss.ensure_unlocked(&self.path)?;
+        self.ss.set_secret(&self.path, password.as_bytes(), TEXT)
+    }
+
+    /// See the keyring-core API docs.
     fn set_secret(&self, secret: &[u8]) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
-        self.ss.set_secret(&self.path, secret)
+        self.ss.set_secret(&self.path, secret, BINARY)
     }
 
     /// See the keyring-core API docs.
