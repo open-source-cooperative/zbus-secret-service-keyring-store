@@ -17,10 +17,12 @@ pub fn decode_error(err: ServiceError) -> Error {
     }
 }
 
+/// Create the error for an empty `target` modifier.
 pub fn empty_target() -> Error {
     Error::Invalid("target".to_string(), "cannot be empty".to_string())
 }
 
+/// Wrap a secret-service error as a platform failure.
 pub fn platform_failure(err: ServiceError) -> Error {
     Error::PlatformFailure(wrap(err))
 }

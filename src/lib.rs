@@ -104,9 +104,11 @@ passwords or secrets in this interface.
 
 */
 
+/// Credentials for Secret Service entries.
 pub mod cred;
 pub mod errors;
 mod service;
+/// The credential store backed by the Secret Service.
 pub mod store;
 pub use store::Store;
 #[cfg(test)]
