@@ -11,6 +11,7 @@ use crate::service::Service;
 
 /// Secret service credential store
 pub struct Store {
+    /// The unique ID for this store instance.
     pub id: String,
     pub(crate) ss: Arc<Service<'static>>,
 }

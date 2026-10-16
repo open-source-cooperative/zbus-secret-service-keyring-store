@@ -16,9 +16,13 @@ use crate::service::Service;
 /// available when a matching item needs to be created.
 pub struct Specifier {
     ss: Arc<Service<'static>>,
+    /// The label given to an item created for the entry.
     pub label: String,
+    /// The collection the item is created in, or `None` for the default collection.
     pub target: Option<String>,
+    /// The service of the entry.
     pub service: String,
+    /// The user of the entry.
     pub user: String,
 }
 
