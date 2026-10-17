@@ -45,6 +45,15 @@ fn entry_new_with_target(target: &str, service: &str, user: &str) -> Entry {
     })
 }
 
+fn entry_new_with_modifiers(service: &str, user: &str, modifiers: &HashMap<&str, &str>) -> Entry {
+    SET_STORE.call_once(usually_goes_in_main);
+    Entry::new_with_modifiers(service, user, modifiers).unwrap_or_else(|err| {
+        panic!(
+            "Couldn't create entry (service: {service}, user: {user}, modifiers: {modifiers:?}): {err:?}"
+        )
+    })
+}
+
 fn generate_random_string() -> String {
     use fastrand;
     use std::iter::repeat_with;
@@ -114,6 +123,12 @@ fn test_invalid_parameter() {
     let entry = Entry::new_with_modifiers("service", "user", &modifiers);
     assert!(matches!(entry, Err(Error::Invalid(_, _))));
     let modifiers = HashMap::from([("label", "")]);
+    let entry = Entry::new_with_modifiers("service", "user", &modifiers);
+    assert!(matches!(entry, Err(Error::Invalid(_, _))));
+    let modifiers = HashMap::from([("password-content-type", "")]);
+    let entry = Entry::new_with_modifiers("service", "user", &modifiers);
+    assert!(matches!(entry, Err(Error::Invalid(_, _))));
+    let modifiers = HashMap::from([("secret-content-type", "")]);
     let entry = Entry::new_with_modifiers("service", "user", &modifiers);
     assert!(matches!(entry, Err(Error::Invalid(_, _))));
     let store = Store::new_with_configuration(&HashMap::from([("anything", "anything")]));
@@ -202,6 +217,167 @@ fn test_update_secret() {
     test_round_trip_secret("updated binary secret", &entry, &updated);
 }
 
+// The content type the store declared for an entry's secret
+fn content_type(entry: &Entry) -> String {
+    let attributes = entry
+        .get_attributes()
+        .unwrap_or_else(|err| panic!("Can't get attributes: {err:?}"));
+    attributes["content-type"].clone()
+}
+
+#[test]
+fn test_alternate_passwords_and_secrets() {
+    // Passwords and secrets are set with different content types; an item
+    // can switch between them, also through a wrapper.
+    let name = generate_random_string();
+    let entry = entry_new(&name, &name);
+    let mut secret = generate_random_bytes();
+    // 0xFF can never appear in UTF-8, so this secret is unambiguously binary
+    secret.push(0xFF);
+    test_round_trip_no_delete("created password", &entry, "a password");
+    entry.set_secret(&secret).unwrap();
+    assert_eq!(entry.get_secret().unwrap(), secret, "password to secret");
+    test_round_trip_no_delete("secret to password", &entry, "このパスワード");
+    let wrapper = entry.get_credential().unwrap();
+    wrapper.set_secret(&secret).unwrap();
+    assert_eq!(entry.get_secret().unwrap(), secret, "wrapper secret");
+    wrapper.set_password("through a wrapper").unwrap();
+    assert_eq!(entry.get_password().unwrap(), "through a wrapper");
+    entry.delete_credential().unwrap();
+}
+
+#[test]
+#[ignore = "Requires a Secret Service that keeps content types (KeePassXC, KDE Wallet); \
+            GNOME Keyring reports text/plain for every item"]
+fn test_content_types() {
+    // Passwords are text, so Secret Service implementations that go by the
+    // content type (KeePassXC, the KDE Wallet) can keep them as passwords;
+    // secrets needn't be text.
+    let name = generate_random_string();
+    let entry = entry_new(&name, &name);
+    let secret = generate_random_bytes();
+    entry.set_password("created as a password").unwrap();
+    assert_eq!(content_type(&entry), "text/plain", "created password");
+    entry.set_secret(&secret).unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "password updated to a secret"
+    );
+    entry.set_password("updated to a password").unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "text/plain",
+        "secret updated to a password"
+    );
+    entry.delete_credential().unwrap();
+    entry.set_secret(&secret).unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "created secret"
+    );
+    // The same through a wrapper of the existing item
+    let wrapper = entry.get_credential().unwrap();
+    wrapper.set_password("set through a wrapper").unwrap();
+    assert_eq!(content_type(&entry), "text/plain", "wrapper password");
+    assert_eq!(entry.get_password().unwrap(), "set through a wrapper");
+    wrapper.set_secret(&secret).unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "wrapper secret"
+    );
+    entry.delete_credential().unwrap();
+}
+
+#[test]
+fn test_content_type_modifiers_and_attribute() {
+    // Entries can set other content types, and the content type of an item
+    // can be updated; neither changes the secret. The modifiers swap the
+    // defaults, as every Secret Service implementation accepts both types.
+    let name = generate_random_string();
+    let modifiers = HashMap::from([
+        ("password-content-type", "application/octet-stream"),
+        ("secret-content-type", "text/plain"),
+    ]);
+    let entry = entry_new_with_modifiers(&name, &name, &modifiers);
+    let specifier = entry.as_any().downcast_ref::<Specifier>().unwrap();
+    assert_eq!(specifier.password_content_type, "application/octet-stream");
+    assert_eq!(specifier.secret_content_type, "text/plain");
+    test_round_trip_no_delete("password with a content type", &entry, "a password");
+    entry
+        .update_attributes(&HashMap::from([("content-type", "text/plain")]))
+        .unwrap();
+    assert_eq!(entry.get_password().unwrap(), "a password");
+    let wrapper = entry.get_credential().unwrap();
+    wrapper
+        .update_attributes(&HashMap::from([
+            ("content-type", "application/octet-stream"),
+            ("random", "bar"),
+        ]))
+        .unwrap();
+    assert_eq!(entry.get_password().unwrap(), "a password");
+    assert_eq!(entry.get_attributes().unwrap()["random"], "bar");
+    entry
+        .update_attributes(&HashMap::from([("content-type", "")]))
+        .unwrap_err();
+    entry.delete_credential().unwrap();
+    let defaults = entry_new(&name, &name);
+    let specifier = defaults.as_any().downcast_ref::<Specifier>().unwrap();
+    assert_eq!(specifier.password_content_type, "text/plain");
+    assert_eq!(specifier.secret_content_type, "application/octet-stream");
+}
+
+#[test]
+#[ignore = "Requires a Secret Service that keeps content types (KeePassXC, KDE Wallet); \
+            GNOME Keyring reports text/plain for every item"]
+fn test_content_types_from_modifiers_and_attribute() {
+    // KeePassXC reports every text type as text/plain, so the types set here
+    // are binary ones, which are kept as they are.
+    let name = generate_random_string();
+    let modifiers = HashMap::from([
+        ("password-content-type", "application/octet-stream"),
+        ("secret-content-type", "image/png"),
+    ]);
+    let entry = entry_new_with_modifiers(&name, &name, &modifiers);
+    entry.set_password("a password").unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "password from modifier"
+    );
+    let secret = generate_random_bytes();
+    entry.set_secret(&secret).unwrap();
+    assert_eq!(content_type(&entry), "image/png", "secret from modifier");
+    entry
+        .update_attributes(&HashMap::from([(
+            "content-type",
+            "application/octet-stream",
+        )]))
+        .unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "updated attribute"
+    );
+    assert_eq!(entry.get_secret().unwrap(), secret);
+    let wrapper = entry.get_credential().unwrap();
+    wrapper
+        .update_attributes(&HashMap::from([("content-type", "image/png")]))
+        .unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "image/png",
+        "updated wrapper attribute"
+    );
+    assert_eq!(entry.get_secret().unwrap(), secret);
+    // A wrapper doesn't have the entry's modifiers
+    wrapper.set_password("through a wrapper").unwrap();
+    assert_eq!(content_type(&entry), "text/plain", "wrapper password");
+    entry.delete_credential().unwrap();
+}
+
 #[test]
 fn test_get_update_attributes() {
     let name1 = generate_random_string();
@@ -215,6 +391,7 @@ fn test_get_update_attributes() {
     assert_eq!(attrs["service"], name1);
     assert!(attrs.contains_key("username"));
     assert_eq!(attrs["username"], name2);
+    assert!(attrs.contains_key("content-type"));
     entry1
         .update_attributes(&HashMap::from([("target", "foo")]))
         .unwrap_err();
