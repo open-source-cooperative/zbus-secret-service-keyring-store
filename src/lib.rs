@@ -32,8 +32,11 @@ as the label. Otherwise, the label is set to the Rust-formatted string:
 `keyring:{user}@{service}`.
 
 Client code is allowed to retrieve and to set all attributes _except_ the
-three that are controlled by this implementation. The label is accessible
-and settable via credential-level calls, but not via entry-level calls.
+three that are controlled by this implementation. Besides the item's
+attributes, the attributes retrieved include `content-type`, the content type
+of the item's secret (see below), which takes the place of an item attribute of
+that name. The label is accessible and settable via credential-level calls,
+but not via entry-level calls.
 The example program in this crate shows how to get at the credential object
 in an entry and use its API.
 
@@ -102,6 +105,14 @@ and keeps others as an attachment, and the KDE Wallet only stores secrets
 with a `text/` content type as passwords. So store a credential as a password
 if it's text, and users will see it as one. (GNOME Keyring doesn't keep
 content types: it reports `text/plain` for every secret.)
+
+An entry can store its secrets with other content types, given by the
+`password-content-type` and `secret-content-type` modifiers in the entry
+creation call; describe the secret, e.g. `image/jpeg` for an image secret.
+The content type of an existing item's secret is its `content-type` attribute,
+and updating that attribute stores the secret again with the new content type.
+Secret Service implementations needn't accept every content type: oo7, for
+one, rejects those it doesn't treat as text or binary data.
 
  ## Usage with KDE Wallet
 

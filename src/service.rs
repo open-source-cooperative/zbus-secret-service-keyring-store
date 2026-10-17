@@ -132,7 +132,6 @@ impl Service<'_> {
     }
 
     /// Given an existing item's path, retrieve the content type of its secret.
-    #[cfg(test)]
     pub(crate) fn get_content_type(&self, path: &OwnedObjectPath) -> Result<String> {
         let ss = self
             .ss
@@ -140,6 +139,22 @@ impl Service<'_> {
             .expect("Mutex failure in credential store: please report a bug");
         let item = ss.get_item_by_path(path.clone()).map_err(decode_error)?;
         item.get_secret_content_type().map_err(decode_error)
+    }
+
+    /// Given an existing item's path, store its secret again with the given
+    /// content type.
+    pub(crate) fn set_content_type(
+        &self,
+        path: &OwnedObjectPath,
+        content_type: &str,
+    ) -> Result<()> {
+        let ss = self
+            .ss
+            .lock()
+            .expect("Mutex failure in credential store: please report a bug");
+        let item = ss.get_item_by_path(path.clone()).map_err(decode_error)?;
+        let secret = item.get_secret().map_err(decode_error)?;
+        item.set_secret(&secret, content_type).map_err(decode_error)
     }
 
     /// Given an existing item's path, retrieve its secret.
