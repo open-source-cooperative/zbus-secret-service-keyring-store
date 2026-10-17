@@ -112,7 +112,9 @@ creation call; describe the secret, e.g. `image/jpeg` for an image secret.
 The content type of an existing item's secret is its `content-type` attribute,
 and updating that attribute stores the secret again with the new content type.
 Secret Service implementations needn't accept every content type: oo7, for
-one, rejects those it doesn't treat as text or binary data.
+one, rejects those it doesn't treat as text or binary data. Leave out
+parameters such as `charset`: oo7 before 0.7 rejects them too, and libsecret
+doesn't read a password whose content type has them.
 
  ## Usage with KDE Wallet
 

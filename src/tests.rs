@@ -294,16 +294,17 @@ fn test_content_types() {
 #[test]
 fn test_content_type_modifiers_and_attribute() {
     // Entries can set other content types, and the content type of an item
-    // can be updated; neither changes the secret.
+    // can be updated; neither changes the secret. The modifiers swap the
+    // defaults, as every Secret Service implementation accepts both types.
     let name = generate_random_string();
     let modifiers = HashMap::from([
-        ("password-content-type", "text/plain; charset=utf8"),
-        ("secret-content-type", "application/octet-stream"),
+        ("password-content-type", "application/octet-stream"),
+        ("secret-content-type", "text/plain"),
     ]);
     let entry = entry_new_with_modifiers(&name, &name, &modifiers);
     let specifier = entry.as_any().downcast_ref::<Specifier>().unwrap();
-    assert_eq!(specifier.password_content_type, "text/plain; charset=utf8");
-    assert_eq!(specifier.secret_content_type, "application/octet-stream");
+    assert_eq!(specifier.password_content_type, "application/octet-stream");
+    assert_eq!(specifier.secret_content_type, "text/plain");
     test_round_trip_no_delete("password with a content type", &entry, "a password");
     entry
         .update_attributes(&HashMap::from([("content-type", "text/plain")]))
