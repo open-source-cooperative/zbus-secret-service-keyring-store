@@ -45,6 +45,15 @@ fn entry_new_with_target(target: &str, service: &str, user: &str) -> Entry {
     })
 }
 
+fn entry_new_with_modifiers(service: &str, user: &str, modifiers: &HashMap<&str, &str>) -> Entry {
+    SET_STORE.call_once(usually_goes_in_main);
+    Entry::new_with_modifiers(service, user, modifiers).unwrap_or_else(|err| {
+        panic!(
+            "Couldn't create entry (service: {service}, user: {user}, modifiers: {modifiers:?}): {err:?}"
+        )
+    })
+}
+
 fn generate_random_string() -> String {
     use fastrand;
     use std::iter::repeat_with;
@@ -114,6 +123,12 @@ fn test_invalid_parameter() {
     let entry = Entry::new_with_modifiers("service", "user", &modifiers);
     assert!(matches!(entry, Err(Error::Invalid(_, _))));
     let modifiers = HashMap::from([("label", "")]);
+    let entry = Entry::new_with_modifiers("service", "user", &modifiers);
+    assert!(matches!(entry, Err(Error::Invalid(_, _))));
+    let modifiers = HashMap::from([("password-content-type", "")]);
+    let entry = Entry::new_with_modifiers("service", "user", &modifiers);
+    assert!(matches!(entry, Err(Error::Invalid(_, _))));
+    let modifiers = HashMap::from([("secret-content-type", "")]);
     let entry = Entry::new_with_modifiers("service", "user", &modifiers);
     assert!(matches!(entry, Err(Error::Invalid(_, _))));
     let store = Store::new_with_configuration(&HashMap::from([("anything", "anything")]));
@@ -204,12 +219,10 @@ fn test_update_secret() {
 
 // The content type the store declared for an entry's secret
 fn content_type(entry: &Entry) -> String {
-    let wrapper = entry
-        .get_credential()
-        .unwrap_or_else(|err| panic!("Can't get credential: {err:?}"));
-    let cred = wrapper.as_any().downcast_ref::<Wrapper>().unwrap();
-    cred.get_content_type()
-        .unwrap_or_else(|err| panic!("Can't get content type: {err:?}"))
+    let attributes = entry
+        .get_attributes()
+        .unwrap_or_else(|err| panic!("Can't get attributes: {err:?}"));
+    attributes["content-type"].clone()
 }
 
 #[test]
@@ -279,6 +292,92 @@ fn test_content_types() {
 }
 
 #[test]
+fn test_content_type_modifiers_and_attribute() {
+    // Entries can set other content types, and the content type of an item
+    // can be updated; neither changes the secret.
+    let name = generate_random_string();
+    let modifiers = HashMap::from([
+        ("password-content-type", "text/plain; charset=utf8"),
+        ("secret-content-type", "application/octet-stream"),
+    ]);
+    let entry = entry_new_with_modifiers(&name, &name, &modifiers);
+    let specifier = entry.as_any().downcast_ref::<Specifier>().unwrap();
+    assert_eq!(specifier.password_content_type, "text/plain; charset=utf8");
+    assert_eq!(specifier.secret_content_type, "application/octet-stream");
+    test_round_trip_no_delete("password with a content type", &entry, "a password");
+    entry
+        .update_attributes(&HashMap::from([("content-type", "text/plain")]))
+        .unwrap();
+    assert_eq!(entry.get_password().unwrap(), "a password");
+    let wrapper = entry.get_credential().unwrap();
+    wrapper
+        .update_attributes(&HashMap::from([
+            ("content-type", "application/octet-stream"),
+            ("random", "bar"),
+        ]))
+        .unwrap();
+    assert_eq!(entry.get_password().unwrap(), "a password");
+    assert_eq!(entry.get_attributes().unwrap()["random"], "bar");
+    entry
+        .update_attributes(&HashMap::from([("content-type", "")]))
+        .unwrap_err();
+    entry.delete_credential().unwrap();
+    let defaults = entry_new(&name, &name);
+    let specifier = defaults.as_any().downcast_ref::<Specifier>().unwrap();
+    assert_eq!(specifier.password_content_type, "text/plain");
+    assert_eq!(specifier.secret_content_type, "application/octet-stream");
+}
+
+#[test]
+#[ignore = "Requires a Secret Service that keeps content types (KeePassXC, KDE Wallet); \
+            GNOME Keyring reports text/plain for every item"]
+fn test_content_types_from_modifiers_and_attribute() {
+    // KeePassXC reports every text type as text/plain, so the types set here
+    // are binary ones, which are kept as they are.
+    let name = generate_random_string();
+    let modifiers = HashMap::from([
+        ("password-content-type", "application/octet-stream"),
+        ("secret-content-type", "image/png"),
+    ]);
+    let entry = entry_new_with_modifiers(&name, &name, &modifiers);
+    entry.set_password("a password").unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "password from modifier"
+    );
+    let secret = generate_random_bytes();
+    entry.set_secret(&secret).unwrap();
+    assert_eq!(content_type(&entry), "image/png", "secret from modifier");
+    entry
+        .update_attributes(&HashMap::from([(
+            "content-type",
+            "application/octet-stream",
+        )]))
+        .unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "application/octet-stream",
+        "updated attribute"
+    );
+    assert_eq!(entry.get_secret().unwrap(), secret);
+    let wrapper = entry.get_credential().unwrap();
+    wrapper
+        .update_attributes(&HashMap::from([("content-type", "image/png")]))
+        .unwrap();
+    assert_eq!(
+        content_type(&entry),
+        "image/png",
+        "updated wrapper attribute"
+    );
+    assert_eq!(entry.get_secret().unwrap(), secret);
+    // A wrapper doesn't have the entry's modifiers
+    wrapper.set_password("through a wrapper").unwrap();
+    assert_eq!(content_type(&entry), "text/plain", "wrapper password");
+    entry.delete_credential().unwrap();
+}
+
+#[test]
 fn test_get_update_attributes() {
     let name1 = generate_random_string();
     let name2 = generate_random_string();
@@ -291,6 +390,7 @@ fn test_get_update_attributes() {
     assert_eq!(attrs["service"], name1);
     assert!(attrs.contains_key("username"));
     assert_eq!(attrs["username"], name2);
+    assert!(attrs.contains_key("content-type"));
     entry1
         .update_attributes(&HashMap::from([("target", "foo")]))
         .unwrap_err();
