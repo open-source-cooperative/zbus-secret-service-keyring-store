@@ -1,6 +1,6 @@
 # zbus Secret Service keyring store
 
-[![build](https://github.com/open-source-cooperative/zbus-secret-service-keyring-store/actions/workflows/ci.yaml/badge.svg)](https://github.com/open-source-cooperative/zbus-secret-service-keyring-store/actions) [![crates.io](https://img.shields.io/crates/v/zbus-secret-service-keyring-store.svg?style=flat-square)](https://crates.io/crates/zbus-secret-service-keyring-store) [![docs.rs](https://docs.rs/zbus-secret-service-keyring-store/badge.svg)](https://docs.rs/zbus-secret-service-keyring-store)
+[![build](https://github.com/open-source-cooperative/zbus-secret-service-keyring-store/actions/workflows/ci.yaml/badge.svg)](https://github.com/open-source-cooperative/zbus-secret-service-keyring-store/actions) [![crates.io](https://img.shields.io/crates/v/zbus-secret-service-keyring-store.svg?style=flat-square)](https://crates.io/crates/zbus-secret-service-keyring-store) [![docs.rs](https://docs.rs/zbus-secret-service-keyring-store/badge.svg)](https://docs.rs/zbus-secret-service-keyring-store) [![codecov](https://codecov.io/gh/open-source-cooperative/zbus-secret-service-keyring-store/graph/badge.svg)](https://codecov.io/gh/open-source-cooperative/zbus-secret-service-keyring-store)
 
 This library provides a credential store for use with the [keyring ecosystem](https://github.com/open-source-cooperative/keyring-rs/wiki/Keyring) that uses the [Secret Service](https://specifications.freedesktop.org/secret-service/latest/description.html) for credential storage.
 
