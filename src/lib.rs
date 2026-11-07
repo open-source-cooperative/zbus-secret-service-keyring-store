@@ -117,10 +117,14 @@ attribute, as the Secret Service reports it; the `keyring:` prefix keeps it
 apart from the item's own attributes. Updating that attribute stores the secret
 again with the new content type.
 
-Wrappers (the credentials returned by searches and by `get_credential`) are
-created without modifiers, so their `set_password` and `set_secret` use the
-default content types. To use another one on an existing item, update its
-`keyring:content-type` attribute.
+Wrappers (the credentials returned by searches and by `get_credential`) stand
+for an existing item, so their `set_password` and `set_secret` keep the item's
+content type. The one exception is a secret that isn't UTF-8 text, set on an
+item with a `text/` content type: a text type can't describe it (and the KDE
+Wallet rejects or mangles such secrets), so it is stored as
+`application/octet-stream`. To use another content type on an existing item,
+update its `keyring:content-type` attribute, or set it through an entry
+created with the content types you want.
 
 Secret Service implementations needn't accept every content type: oo7, for
 one, rejects those it doesn't treat as text or binary data. Leave out

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Once};
 
 use super::{Store, cred::Specifier};
-use crate::cred::Wrapper;
+use crate::cred::{Wrapper, secret_content_type};
 use keyring_core::{CredentialStore, Entry, Error, api::CredentialPersistence, get_default_store};
 
 static SET_STORE: Once = Once::new();
@@ -258,9 +258,10 @@ fn test_alternate_passwords_and_secrets() {
 #[test]
 fn test_content_types() {
     // Passwords and secrets are stored with the default content types, or
-    // with those of the entry's modifiers, and an item's content type can be
-    // updated; none of this changes the secret. The modifiers swap the
-    // defaults, as every Secret Service implementation accepts both.
+    // with those of the entry's modifiers; wrappers keep the item's content
+    // type; and an item's content type can be updated. None of this changes
+    // the secret. The modifiers swap the defaults, as every Secret Service
+    // implementation accepts both.
     let mut ignored = 0;
     let name = generate_random_string();
     let secret = generate_random_bytes();
@@ -277,16 +278,37 @@ fn test_content_types() {
         "default secret",
         &mut ignored,
     );
+    // Wrappers keep the item's content type...
     let wrapper = entry.get_credential().unwrap();
     wrapper.set_password("through a wrapper").unwrap();
-    check_content_type(&wrapper, "text/plain", "wrapper password", &mut ignored);
-    wrapper.set_secret(&secret).unwrap();
     check_content_type(
         &wrapper,
         "application/octet-stream",
-        "wrapper secret",
+        "wrapper password on a secret",
         &mut ignored,
     );
+    assert_eq!(entry.get_password().unwrap(), "through a wrapper");
+    entry.set_password("a password").unwrap();
+    check_content_type(&entry, "text/plain", "password set again", &mut ignored);
+    wrapper.set_secret(b"a text secret").unwrap();
+    check_content_type(
+        &wrapper,
+        "text/plain",
+        "wrapper text secret on a password",
+        &mut ignored,
+    );
+    // ...unless it's a text type and the secret isn't UTF-8 text.
+    let mut binary = generate_random_bytes();
+    // 0xFF can never appear in UTF-8, so this secret is unambiguously binary
+    binary.push(0xFF);
+    wrapper.set_secret(&binary).unwrap();
+    check_content_type(
+        &wrapper,
+        "application/octet-stream",
+        "wrapper binary secret on a password",
+        &mut ignored,
+    );
+    assert_eq!(entry.get_secret().unwrap(), binary);
     entry.delete_credential().unwrap();
 
     let modifiers = HashMap::from([
@@ -342,6 +364,28 @@ fn test_content_types() {
              with other content types: it seems to ignore content types."
         );
     }
+}
+
+#[test]
+fn test_wrapper_secret_content_type() {
+    // A wrapper keeps an item's content type, unless that's a text type and
+    // the secret isn't UTF-8 text.
+    let binary = [b'a', 0xFF];
+    assert_eq!(secret_content_type("text/plain", b"text"), "text/plain");
+    assert_eq!(
+        secret_content_type("text/plain", &binary),
+        "application/octet-stream"
+    );
+    assert_eq!(
+        secret_content_type("Text/HTML", &binary),
+        "application/octet-stream"
+    );
+    assert_eq!(secret_content_type("image/png", &binary), "image/png");
+    assert_eq!(
+        secret_content_type("application/octet-stream", b"text"),
+        "application/octet-stream"
+    );
+    assert_eq!(secret_content_type("text", &binary), "text");
 }
 
 #[test]

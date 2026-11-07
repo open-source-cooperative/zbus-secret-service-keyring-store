@@ -259,14 +259,21 @@ impl CredentialApi for Wrapper {
     /// [content types](crate#content-types).
     fn set_password(&self, password: &str) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
-        self.ss.set_secret(&self.path, password.as_bytes(), TEXT)
+        let content_type = self.ss.get_content_type(&self.path)?;
+        self.ss
+            .set_secret(&self.path, password.as_bytes(), &content_type)
     }
 
     /// See the keyring-core API docs, and the crate docs on
     /// [content types](crate#content-types).
     fn set_secret(&self, secret: &[u8]) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
-        self.ss.set_secret(&self.path, secret, BINARY)
+        let content_type = self.ss.get_content_type(&self.path)?;
+        self.ss.set_secret(
+            &self.path,
+            secret,
+            secret_content_type(&content_type, secret),
+        )
     }
 
     /// See the keyring-core API docs.
@@ -360,4 +367,18 @@ fn update_attributes(
         ss.set_content_type(path, content_type)?;
     }
     Ok(())
+}
+
+/// The content type to store a secret with on an existing item: the item's
+/// own, unless that is a text type and the secret isn't UTF-8 text, which a
+/// text type can't describe.
+pub(crate) fn secret_content_type<'a>(existing: &'a str, secret: &[u8]) -> &'a str {
+    let text = existing
+        .get(..5)
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("text/"));
+    if text && std::str::from_utf8(secret).is_err() {
+        BINARY
+    } else {
+        existing
+    }
 }
