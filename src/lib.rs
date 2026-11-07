@@ -32,8 +32,10 @@ as the label. Otherwise, the label is set to the Rust-formatted string:
 `keyring:{user}@{service}`.
 
 Client code is allowed to retrieve and to set all attributes _except_ the
-three that are controlled by this implementation. The label is accessible
-and settable via credential-level calls, but not via entry-level calls.
+three that are controlled by this implementation. The attributes also include
+`keyring:content-type`, the content type of the item's secret; see
+[Content types](#content-types). The label is accessible and settable via
+credential-level calls, but not via entry-level calls.
 The example program in this crate shows how to get at the credential object
 in an entry and use its API.
 
@@ -92,15 +94,55 @@ As noted in
 there is no "default" collection defined under WSL.  So this crate will not work
 on WSL unless you specify a non-`default` target modifier on every specifier.
 
- ## Usage with KDE Wallet
+## Content types
+
+Every secret in the Secret Service carries a content type (a MIME type), and
+some implementations go by it. KeePassXC only puts a secret whose content type
+is (or derives from) `text/plain` in an entry's password field, and keeps
+others as an attachment. The KDE Wallet only stores secrets with a `text/`
+content type as password entries, and others as binary entries. (See
+[issue #25](https://github.com/open-source-cooperative/zbus-secret-service-keyring-store/issues/25).)
+
+So this store sets the content type by what is being stored: passwords
+(`set_password`) as `text/plain`, secrets (`set_secret`) as
+`application/octet-stream`. Store a credential as a password if it's text, and
+users will see it as one.
+
+An entry can use other content types, given by modifiers in the entry creation
+call: `password-content-type` for its passwords and `secret-content-type` for
+its secrets. Use them to describe the secret, e.g. `image/jpeg` for an image.
+
+The content type of an existing item's secret is its `keyring:content-type`
+attribute, as the Secret Service reports it; the `keyring:` prefix keeps it
+apart from the item's own attributes. Updating that attribute stores the secret
+again with the new content type.
+
+Wrappers (the credentials returned by searches and by `get_credential`) stand
+for an existing item, so their `set_password` and `set_secret` keep the item's
+content type. The one exception is a secret that isn't UTF-8 text, set on an
+item with a `text/` content type: a text type can't describe it (and the KDE
+Wallet rejects or mangles such secrets), so it is stored as
+`application/octet-stream`. To use another content type on an existing item,
+update its `keyring:content-type` attribute, or set it through an entry
+created with the content types you want.
+
+Secret Service implementations needn't accept every content type: oo7, for
+one, rejects those it doesn't treat as text or binary data. Leave out
+parameters such as `charset`: oo7 before 0.7 rejects them too, and libsecret
+doesn't read a password whose content type has them. GNOME Keyring doesn't keep
+content types at all: it reports `text/plain` for every secret.
+
+## Usage with KDE Wallet
 
 On many KDE-based desktop systems, the default Secret Service implementation
 is provided by the KDE Wallet (and its included secret-service-api wrapper).
 Since the KDE Wallet itself is limited to reading and writing UTF-8 data,
 you cannot use this module to store arbitrary binary secrets unless you
 first encode them as UTF-8 strings (e.g., via base64 encoding). Once you
-encode your secrets in UTF-8, you can read and write them using as either
-passwords or secrets in this interface.
+encode your secrets in UTF-8, you can read and write them as either
+passwords or secrets in this interface. Set them as passwords if you want the
+KDE Wallet to show them as passwords: as secrets, they are stored as binary
+entries (see [Content types](#content-types)).
 
 */
 
