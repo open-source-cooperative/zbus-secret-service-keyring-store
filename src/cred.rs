@@ -327,29 +327,32 @@ impl CredentialApi for Wrapper {
 }
 
 /// Returns an item's attributes, with the content type of its secret
-/// as `content-type`.
+/// as `keyring:content-type`.
 fn get_attributes(ss: &Service, path: &OwnedObjectPath) -> Result<HashMap<String, String>> {
     let mut attributes = ss.get_attributes(path)?;
-    attributes.insert("content-type".to_string(), ss.get_content_type(path)?);
+    attributes.insert(
+        "keyring:content-type".to_string(),
+        ss.get_content_type(path)?,
+    );
     Ok(attributes)
 }
 
-/// Updates an item's attributes, storing its secret again if `content-type`
-/// is among them.
+/// Updates an item's attributes, storing its secret again if
+/// `keyring:content-type` is among them.
 fn update_attributes(
     ss: &Service,
     path: &OwnedObjectPath,
     attributes: &HashMap<&str, &str>,
 ) -> Result<()> {
-    let content_type = attributes.get("content-type");
+    let content_type = attributes.get("keyring:content-type");
     if content_type.is_some_and(|c| c.is_empty()) {
         return Err(Error::Invalid(
-            "content-type".to_string(),
+            "keyring:content-type".to_string(),
             "cannot be empty".to_string(),
         ));
     }
     let mut attributes = attributes.clone();
-    attributes.remove("content-type");
+    attributes.remove("keyring:content-type");
     if !attributes.is_empty() {
         ss.update_attributes(path, &attributes)?;
     }

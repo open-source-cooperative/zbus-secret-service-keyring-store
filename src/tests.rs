@@ -218,15 +218,15 @@ fn test_update_secret() {
 }
 
 // Checks the content type that the Secret Service reports for a credential's
-// secret, as its content-type attribute. GNOME Keyring doesn't keep content
-// types and reports text/plain for every secret, so text/plain where another
-// content type was expected only counts as ignored.
+// secret, as its keyring:content-type attribute. GNOME Keyring doesn't keep
+// content types and reports text/plain for every secret, so text/plain where
+// another content type was expected only counts as ignored.
 fn check_content_type(cred: &Entry, expected: &str, case: &str, ignored: &mut usize) {
     let attributes = cred
         .get_attributes()
         .unwrap_or_else(|err| panic!("Can't get attributes for {case}: {err:?}"));
     let actual = attributes
-        .get("content-type")
+        .get("keyring:content-type")
         .unwrap_or_else(|| panic!("No content type for {case}"));
     if actual != expected {
         assert_eq!(actual, "text/plain", "Content types don't match for {case}");
@@ -310,7 +310,7 @@ fn test_content_types() {
     check_content_type(&entry, "text/plain", "secret from modifier", &mut ignored);
     entry
         .update_attributes(&HashMap::from([(
-            "content-type",
+            "keyring:content-type",
             "application/octet-stream",
         )]))
         .unwrap();
@@ -323,7 +323,7 @@ fn test_content_types() {
     assert_eq!(entry.get_secret().unwrap(), text_secret);
     let wrapper = entry.get_credential().unwrap();
     wrapper
-        .update_attributes(&HashMap::from([("content-type", "text/plain")]))
+        .update_attributes(&HashMap::from([("keyring:content-type", "text/plain")]))
         .unwrap();
     check_content_type(
         &wrapper,
@@ -333,7 +333,7 @@ fn test_content_types() {
     );
     assert_eq!(entry.get_secret().unwrap(), text_secret);
     entry
-        .update_attributes(&HashMap::from([("content-type", "")]))
+        .update_attributes(&HashMap::from([("keyring:content-type", "")]))
         .unwrap_err();
     entry.delete_credential().unwrap();
     if ignored > 0 {
@@ -357,7 +357,7 @@ fn test_get_update_attributes() {
     assert_eq!(attrs["service"], name1);
     assert!(attrs.contains_key("username"));
     assert_eq!(attrs["username"], name2);
-    assert!(attrs.contains_key("content-type"));
+    assert!(attrs.contains_key("keyring:content-type"));
     entry1
         .update_attributes(&HashMap::from([("target", "foo")]))
         .unwrap_err();
