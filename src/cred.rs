@@ -147,21 +147,14 @@ impl Specifier {
 }
 
 impl CredentialApi for Specifier {
-    /// See the keyring-core API docs.
-    ///
-    /// Passwords are stored as text (`text/plain`), so that Secret Service
-    /// implementations which care about the content type (KeePassXC, the
-    /// KDE Wallet) keep them as passwords, unless the specifier was created
-    /// with a `password-content-type` modifier.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn set_password(&self, password: &str) -> Result<()> {
         self.set(password.as_bytes(), &self.password_content_type)
     }
 
-    /// See the keyring-core API docs.
-    ///
-    /// Secrets are stored as `application/octet-stream`, since they needn't
-    /// be text, unless the specifier was created with a
-    /// `secret-content-type` modifier.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn set_secret(&self, secret: &[u8]) -> Result<()> {
         self.set(secret, &self.secret_content_type)
     }
@@ -172,18 +165,15 @@ impl CredentialApi for Specifier {
         self.ss.get_secret(&path)
     }
 
-    /// See the keyring-core API docs.
-    ///
-    /// Besides the item's attributes, this returns the content type of its
-    /// secret as `content-type`.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn get_attributes(&self) -> Result<HashMap<String, String>> {
         let path = self.get_unique_item()?;
         get_attributes(&self.ss, &path)
     }
 
-    /// See the keyring-core API docs.
-    ///
-    /// Updating `content-type` stores the secret again with that content type.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn update_attributes(&self, attributes: &HashMap<&str, &str>) -> Result<()> {
         for key in attributes.keys() {
             if *key == "target" || *key == "service" || *key == "username" {
@@ -265,15 +255,15 @@ impl Wrapper {
 }
 
 impl CredentialApi for Wrapper {
-    /// See the keyring-core API docs.
-    ///
-    /// Passwords are stored as text (`text/plain`), as in [Specifier].
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn set_password(&self, password: &str) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
         self.ss.set_secret(&self.path, password.as_bytes(), TEXT)
     }
 
-    /// See the keyring-core API docs.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn set_secret(&self, secret: &[u8]) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
         self.ss.set_secret(&self.path, secret, BINARY)
@@ -285,18 +275,15 @@ impl CredentialApi for Wrapper {
         self.ss.get_secret(&self.path)
     }
 
-    /// See the keyring-core API docs.
-    ///
-    /// As in [Specifier], this includes the content type as `content-type`.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn get_attributes(&self) -> Result<HashMap<String, String>> {
         self.ss.ensure_unlocked(&self.path)?;
         get_attributes(&self.ss, &self.path)
     }
 
-    /// See the keyring-core API docs.
-    ///
-    /// As in [Specifier], updating `content-type` stores the secret again
-    /// with that content type.
+    /// See the keyring-core API docs, and the crate docs on
+    /// [content types](crate#content-types).
     fn update_attributes(&self, attributes: &HashMap<&str, &str>) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
         update_attributes(&self.ss, &self.path, attributes)

@@ -16,16 +16,10 @@ use zbus::zvariant::OwnedObjectPath;
 use crate::errors::{decode_error, platform_failure};
 use keyring_core::{Error, Result};
 
-/// The content type of secrets set as passwords, which are always UTF-8 text.
-///
-/// Secret Service implementations rely on it: KeePassXC only puts secrets
-/// whose content type is (or derives from) `text/plain` in an entry's
-/// password field (others become an attachment), and the KDE Wallet only
-/// stores secrets with a `text/` content type as passwords (others become
-/// binary entries).
+/// The default content type of passwords; see the crate docs on content types.
 pub(crate) const TEXT: &str = "text/plain";
 
-/// The content type of secrets set as bytes, which needn't be text.
+/// The default content type of secrets; see the crate docs on content types.
 pub(crate) const BINARY: &str = "application/octet-stream";
 
 pub(crate) struct Service<'a> {
