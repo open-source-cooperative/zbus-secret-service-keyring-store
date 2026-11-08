@@ -236,31 +236,36 @@ fn check_content_type(cred: &Entry, expected: &str, case: &str, ignored: &mut us
 
 #[test]
 fn test_alternate_passwords_and_secrets() {
-    // Passwords and secrets are set with different content types; an item
-    // can switch between them, also through a wrapper.
+    // Passwords and secrets are set with different content types, and an
+    // item can switch between them. A wrapper keeps the item's content type,
+    // so it sets a password on a password, and a secret on a secret.
     let name = generate_random_string();
     let entry = entry_new(&name, &name);
     let mut secret = generate_random_bytes();
-    // 0xFF can never appear in UTF-8, so this secret is unambiguously binary
+    // 0xFF can never appear in UTF-8, so these secrets are unambiguously binary
     secret.push(0xFF);
+    let mut other_secret = generate_random_bytes();
+    other_secret.push(0xFF);
     test_round_trip_no_delete("created password", &entry, "a password");
     entry.set_secret(&secret).unwrap();
     assert_eq!(entry.get_secret().unwrap(), secret, "password to secret");
     test_round_trip_no_delete("secret to password", &entry, "このパスワード");
     let wrapper = entry.get_credential().unwrap();
-    wrapper.set_secret(&secret).unwrap();
-    assert_eq!(entry.get_secret().unwrap(), secret, "wrapper secret");
     wrapper.set_password("through a wrapper").unwrap();
     assert_eq!(entry.get_password().unwrap(), "through a wrapper");
+    entry.set_secret(&secret).unwrap();
+    wrapper.set_secret(&other_secret).unwrap();
+    assert_eq!(entry.get_secret().unwrap(), other_secret, "wrapper secret");
     entry.delete_credential().unwrap();
 }
 
 #[test]
 fn test_content_types() {
     // Passwords and secrets are stored with the default content types, or
-    // with those of the entry's modifiers, and an item's content type can be
-    // updated; none of this changes the secret. The modifiers swap the
-    // defaults, as every Secret Service implementation accepts both.
+    // with those of the entry's modifiers; wrappers keep the item's content
+    // type; and an item's content type can be updated. None of this changes
+    // the secret. The modifiers swap the defaults, as every Secret Service
+    // implementation accepts both.
     let mut ignored = 0;
     let name = generate_random_string();
     let secret = generate_random_bytes();
@@ -277,14 +282,23 @@ fn test_content_types() {
         "default secret",
         &mut ignored,
     );
+    // Wrappers keep the item's content type
     let wrapper = entry.get_credential().unwrap();
     wrapper.set_password("through a wrapper").unwrap();
-    check_content_type(&wrapper, "text/plain", "wrapper password", &mut ignored);
-    wrapper.set_secret(&secret).unwrap();
     check_content_type(
         &wrapper,
         "application/octet-stream",
-        "wrapper secret",
+        "wrapper password on a secret",
+        &mut ignored,
+    );
+    assert_eq!(entry.get_password().unwrap(), "through a wrapper");
+    entry.set_password("a password").unwrap();
+    check_content_type(&entry, "text/plain", "password set again", &mut ignored);
+    wrapper.set_secret(b"a text secret").unwrap();
+    check_content_type(
+        &wrapper,
+        "text/plain",
+        "wrapper text secret on a password",
         &mut ignored,
     );
     entry.delete_credential().unwrap();
@@ -357,7 +371,7 @@ fn test_get_update_attributes() {
     assert_eq!(attrs["service"], name1);
     assert!(attrs.contains_key("username"));
     assert_eq!(attrs["username"], name2);
-    assert!(attrs.contains_key("keyring:content-type"));
+    assert_eq!(attrs["keyring:content-type"], "text/plain");
     entry1
         .update_attributes(&HashMap::from([("target", "foo")]))
         .unwrap_err();

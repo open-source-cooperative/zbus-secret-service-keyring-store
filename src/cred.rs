@@ -259,14 +259,17 @@ impl CredentialApi for Wrapper {
     /// [content types](crate#content-types).
     fn set_password(&self, password: &str) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
-        self.ss.set_secret(&self.path, password.as_bytes(), TEXT)
+        let content_type = self.ss.get_content_type(&self.path)?;
+        self.ss
+            .set_secret(&self.path, password.as_bytes(), &content_type)
     }
 
     /// See the keyring-core API docs, and the crate docs on
     /// [content types](crate#content-types).
     fn set_secret(&self, secret: &[u8]) -> Result<()> {
         self.ss.ensure_unlocked(&self.path)?;
-        self.ss.set_secret(&self.path, secret, BINARY)
+        let content_type = self.ss.get_content_type(&self.path)?;
+        self.ss.set_secret(&self.path, secret, &content_type)
     }
 
     /// See the keyring-core API docs.

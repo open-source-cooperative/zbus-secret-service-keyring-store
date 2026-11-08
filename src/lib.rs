@@ -118,10 +118,10 @@ prefix is used to avoid conflicts with the names of existing attributes.)
 Updating the `keyring:content-type` attribute updates the content type on the
 item.
 
-Wrappers (the credentials returned by searches and by `get_credential`) are
-created without modifiers, so their `set_password` and `set_secret` use the
-default content types. To use another one on an existing item, update its
-`keyring:content-type` attribute.
+Wrappers (the credentials returned by searches and by `get_credential`) wrap
+existing items, which already have content types. Unlike specifiers, setting a
+password or secret on a wrapper does _not_ set the item's content type. You can
+update the wrapper's `keyring:content-type` attribute if you need to do that.
 
 Secret Service implementations needn't accept every content type: oo7, for
 one, rejects those it doesn't treat as text or binary data. Leave out
