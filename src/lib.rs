@@ -112,10 +112,11 @@ An entry can use other content types, given by modifiers in the entry creation
 call: `password-content-type` for its passwords and `secret-content-type` for
 its secrets. Use them to describe the secret, e.g. `image/jpeg` for an image.
 
-The content type of an existing item's secret is its `keyring:content-type`
-attribute, as the Secret Service reports it; the `keyring:` prefix keeps it
-apart from the item's own attributes. Updating that attribute stores the secret
-again with the new content type.
+Each item stores a content type along with its secret. The content type of an
+item is accessible as its `keyring:content-type` attribute. (The `keyring:`
+prefix is used to avoid conflicts with the names of existing attributes.)
+Updating the `keyring:content-type` attribute updates the content type on the
+item.
 
 Wrappers (the credentials returned by searches and by `get_credential`) are
 created without modifiers, so their `set_password` and `set_secret` use the
