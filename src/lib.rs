@@ -56,9 +56,12 @@ This crate has no features of its own: all of its features are simply passed
 on to the [secret-service crate](https://crates.io/crates/secret-service)
 that it uses to communicate with Secret Service. (See the
 [docs for that crate](https://docs.rs/docs/zbus-secret-service) for details.)
-You must enable exactly one of the four (mutually-exclusive) features
-in order to declare which async runtime you are using and
-which cryptography utilities you want to use.
+You must enable exactly one of `crypto-rust` or `crypto-openssl` to declare
+which cryptography utilities you want to use. To run the blocking calls this
+crate makes on tokio rather than on zbus's own executor, enable
+`rt-tokio-crypto-rust` or `rt-tokio-crypto-openssl` instead. The
+`rt-async-io-crypto-rust` and `rt-async-io-crypto-openssl` features are kept
+for existing dependents and are the same as `crypto-rust` and `crypto-openssl`.
 
 ## Headless usage
 
