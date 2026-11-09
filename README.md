@@ -10,7 +10,7 @@ To use this credential store provider, you must take a dependency on the [keyrin
 
 ## Features
 
-The features of this crate mirror those of the [secret-service crate](https://crates.io/crates/secret-service).  If your application does not use an asynchronous runtime, then you should only enable one of the two features which specify the cryptographic backend the Secret Service will use (`crypto-rust` or `crypto-openssl`). If your application uses an asynchronous runtime, you should instead enable one of the four features that specify both which runtime you are using and which cryptographic backend to use (`rt-tokio-crypto-rust`, `rt-tokio-crypto-openssl`, `rt-async-std-crypto-rust`, or `rt-async-std-crypto-openssl`).
+The features of this crate pick the cryptographic backend of the [secret-service crate](https://crates.io/crates/secret-service): enable exactly one of `crypto-rust` or `crypto-openssl`. This crate uses the blocking API of secret-service, which runs on zbus's own executor. If you want those blocking calls to run on tokio instead, enable `rt-tokio-crypto-rust` or `rt-tokio-crypto-openssl` in place of the plain crypto feature. The `rt-async-io-crypto-rust` and `rt-async-io-crypto-openssl` features are kept so that existing dependents keep building; since secret-service 6 they are the same as `crypto-rust` and `crypto-openssl`.
 
 # Changelog
 

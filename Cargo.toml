@@ -5,7 +5,7 @@ homepage = "https://github.com/open-source-cooperative/keyring-rs/wiki/Keyring"
 keywords = ["zbus", "secret-service", "credential-store", "keyring"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/open-source-cooperative/zbus-secret-service-keyring-store.git"
-rust-version = "1.88"
+rust-version = "1.89"
 exclude = [".github/"]
 readme = "README.md"
 name = "zbus-secret-service-keyring-store"
@@ -15,15 +15,18 @@ edition = "2024"
 [features]
 crypto-rust = ["secret-service/crypto-rust"]
 crypto-openssl = ["secret-service/crypto-openssl"]
-rt-async-io-crypto-rust = ["secret-service/rt-async-io-crypto-rust"]
-rt-async-io-crypto-openssl = ["secret-service/rt-async-io-crypto-openssl"]
-rt-tokio-crypto-rust = ["secret-service/rt-tokio-crypto-rust"]
-rt-tokio-crypto-openssl = ["secret-service/rt-tokio-crypto-openssl"]
+# secret-service 6 has no runtime-specific crypto features: zbus 6 brings its own
+# runtime, and `rt-tokio` only moves the blocking API onto tokio. These names are
+# kept so that existing dependents keep building.
+rt-async-io-crypto-rust = ["crypto-rust"]
+rt-async-io-crypto-openssl = ["crypto-openssl"]
+rt-tokio-crypto-rust = ["crypto-rust", "secret-service/rt-tokio"]
+rt-tokio-crypto-openssl = ["crypto-openssl", "secret-service/rt-tokio"]
 
 [dependencies]
 keyring-core = "1"
-secret-service = "5"
-zbus = "5"
+secret-service = "6.0.0-rc.1"
+zbus = { version = "6", default-features = false }
 
 [dev-dependencies]
 fastrand = "2"

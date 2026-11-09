@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use zbus::zvariant::OwnedObjectPath;
+use zbus::OwnedObjectPath;
 
 use keyring_core::Entry;
 use keyring_core::api::{Credential, CredentialApi};
