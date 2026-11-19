@@ -80,7 +80,15 @@ impl CredentialStoreApi for Store {
         user: &str,
         modifiers: Option<&HashMap<&str, &str>>,
     ) -> Result<Entry> {
-        let mods = parse_attributes(&["target", "label"], modifiers)?;
+        let mods = parse_attributes(
+            &[
+                "target",
+                "label",
+                "+password-content-type",
+                "+secret-content-type",
+            ],
+            modifiers,
+        )?;
         let label = mods.get("label").map(|s| s.as_str());
         if label.map(|l| l.is_empty()).unwrap_or(false) {
             return Err(Error::Invalid(
@@ -101,6 +109,8 @@ impl CredentialStoreApi for Store {
             target,
             service,
             user,
+            mods.get("password-content-type").map(|s| s.as_str()),
+            mods.get("secret-content-type").map(|s| s.as_str()),
         )))
     }
 
