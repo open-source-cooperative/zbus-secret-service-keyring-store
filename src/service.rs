@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use secret_service::{EncryptionType, blocking::Item, blocking::SecretService};
-use zbus::zvariant::OwnedObjectPath;
+use zbus::OwnedObjectPath;
 
 use crate::errors::{decode_error, platform_failure};
 use keyring_core::{Error, Result};
